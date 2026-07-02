@@ -48,15 +48,13 @@ RoboMIND 文档给出的 Xsens 手部 6 维顺序：
 
 ## 数据选择
 
-不要下载完整 RoboMIND。先使用小任务子集做 smoke test。
-
-首选 Xsens smoke-test 来源：
+不要下载完整 RoboMIND。本 change 聚焦单任务 smoke / baseline 链路，已完成的数据来源：
 
 ```text
 benchmark1_1_compressed/h5_tienkung_xsens_1rgb/pick_pipe_place_plate_twice
 ```
 
-已知问题：即使最小 Xsens 任务也需要多个压缩分片，当前代理下载较慢。可以先使用已经抽出的真实 HDF5 样本和 `robomind_static/` 下的静态 schema 文件实现 reader 骨架。
+面向 XVLA 公开任务的多任务 Xsens 数据选择与训练是下一阶段工作，由 `add-xvla-xsens-multitask-baseline` 管理。
 
 ## LeRobotDataset 特征
 

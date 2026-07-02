@@ -22,9 +22,8 @@ RoboMIND TienKung Xsens 数据值得作为预适配数据源，因为公开 sche
 
 - 将 RoboMIND TienKung Xsens 字段映射到 XVLA canonical 26 维状态/动作向量。
 - 将选定的 RoboMIND 轨迹转换为 LeRobotDataset 兼容记录。
-- 在 `lerobot312` 环境中使用 `lerobot/smolvla_base` 做 LoRA/PEFT smoke training。
+- 在 `lerobot312` 环境中使用 `lerobot/smolvla_base` 做 LoRA/PEFT smoke training 和单任务小规模 baseline training。
 - 保持 Isaac Sim/XVLA benchmark 运行环境 `xmimic` 与训练环境分离。
-- 产出后续可被 ZMQ `policy_infer.py` 服务加载的 checkpoint 和输入/输出约定。
 
 ## 不在范围内
 
@@ -32,6 +31,8 @@ RoboMIND TienKung Xsens 数据值得作为预适配数据源，因为公开 sche
 - Isaac Sim 任务脚本、遥操作采集或 TianYi2.0 IK 实现。
 - 下载完整 RoboMIND 数据集。
 - 对所有 TienKung 任务做训练。
+- 面向 XVLA 公开任务的多任务 Xsens 数据选择与训练；该工作由后续 change `add-xvla-xsens-multitask-baseline` 管理。
+- ZMQ policy inference service；该工作由后续 change `add-xvla-zmq-policy-inference` 管理。
 - 保证 RoboMIND TienKung/Inspire hand 数据无需 XVLA 同构数据即可迁移到 TianYi2.0/BrainCo2。
 
 ## 风险
@@ -41,4 +42,3 @@ RoboMIND TienKung Xsens 数据值得作为预适配数据源，因为公开 sche
 - RoboMIND 任务分布与比赛天平门、托盘、开关、双手传递任务不完全一致。
 - 当前代理下载大分片较慢，完整 smoke dataset 下载可能中断。
 - SmolVLA LoRA 能拟合源数据不代表能直接通过 XVLA benchmark，最终仍需要 XVLA 同构数据微调或控制保护。
-

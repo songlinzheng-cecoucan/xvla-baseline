@@ -167,15 +167,6 @@ baseline evaluation MUST 支持在 held-out episodes 上比较 SmolVLA 预测 ac
 - **AND** 索引 `20:26` 必须统计为 `right_hand`
 - **AND** 不得把不同 group 的误差混合后替代分组指标
 
-#### Scenario: chunk open-loop action 对比
-
-- **GIVEN** SmolVLA checkpoint 的 `chunk_size` 为 50
-- **AND** dataset 能提供与训练一致的 future action window
-- **WHEN** open-loop inspection 脚本以 `--mode chunk` 运行
-- **THEN** 脚本必须将预测 action chunk 与 ground-truth future action chunk 对齐
-- **AND** 必须显式处理 episode 边界或 padding mask
-- **AND** 不得把跨 episode 的 future action 当作合法 ground truth
-
 #### Scenario: open-loop 指标解释边界
 
 - **GIVEN** open-loop inspection 生成了 action MAE/MSE 指标
@@ -196,38 +187,6 @@ baseline training path MUST 支持在长训练前先运行短 SmolVLA LoRA smoke
 - **THEN** 训练必须能在 CUDA 上启动
 - **AND** 必须完成至少一个 checkpoint 或显式 dry-run validation
 - **AND** 失败时必须能区分问题属于 data schema、显存、依赖还是 model loading
-
-### Requirement: SmolVLA Train Runner
-
-baseline training path MUST 提供仓库内可调用的 train runner，而不仅是不可检查的 shell command 记录。
-
-#### Scenario: 构造 XVLA SmolVLA 训练配置
-
-- **GIVEN** 一个转换后的 LeRobotDataset root
-- **AND** 本地可用 `lerobot/smolvla_base`
-- **WHEN** train runner 构造训练任务
-- **THEN** 必须显式设置 `policy.push_to_hub=false`
-- **AND** 必须显式设置 `policy.input_features=null`
-- **AND** 必须显式设置 `policy.output_features=null`
-- **AND** 必须使用 LoRA/PEFT 配置
-- **AND** 不得把 26D action 静默改成 ALOHA 6D
-
-#### Scenario: 训练前 preflight validation
-
-- **GIVEN** 一个训练请求
-- **WHEN** train runner 启动 LeRobot 训练前
-- **THEN** 必须检查 dataset root 是否存在
-- **AND** 必须检查 dataset feature schema 包含 `observation.images.camera_top`、26D `observation.state` 和 26D `action`
-- **AND** 必须检查训练参数中 `steps`、`batch_size` 和 LoRA rank 为正数
-- **AND** 必须在 CUDA 不可用、模型缓存缺失、proxy 配置错误或 feature 不匹配时返回可区分的失败类型
-
-#### Scenario: 训练输出 manifest
-
-- **GIVEN** train runner 完成训练或失败
-- **WHEN** 训练任务结束
-- **THEN** 必须写出训练 manifest
-- **AND** 成功时 manifest 必须包含 dataset root、policy path、训练参数、checkpoint 路径和 training step
-- **AND** 失败时 manifest 必须包含 `failure_type`、错误消息和执行命令
 
 ### Requirement: Runtime 环境分离
 

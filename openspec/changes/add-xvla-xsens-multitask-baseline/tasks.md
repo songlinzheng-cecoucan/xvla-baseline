@@ -1,0 +1,17 @@
+# 任务清单
+
+- [x] 明确需要从单任务 smoke baseline 切换到 XVLA 相关多任务 Xsens baseline。
+- [x] 整理 `benchmark1_0_compressed` 和 `benchmark1_1_compressed` 中网页已确认的 Xsens task，并按 XVLA 相关性分类。
+- [ ] 用 Hugging Face 登录态或 CLI/API 获取 `benchmark1_0_compressed/h5_tienkung_xsens_1rgb` 完整文件清单，补齐网页 `Load more files` 后面的任务。
+- [ ] 记录每个候选 task 的 compressed shard 数量和总大小。
+- [ ] 下载第一批高优先级 task：`gear_place`、`place_button`、`place_button_then_press`。
+- [ ] 解压第一批 task，并验证每个 task 至少一个真实 HDF5 trajectory 通过 Xsens reader。
+- [ ] 下载第二批中高优先级 task：`pick_shelf_insert_machine_press_switch_place_plate`、`battery_insertion_with_pullout`、`pick_pipe_place_plate_twice`。
+- [ ] 将多任务 Xsens HDF5 转换为统一 LeRobotDataset。
+- [ ] 生成 task distribution manifest。
+- [ ] 生成 episode-level train/val/test split，并保证同一 episode 不跨 split。
+- [ ] 在多任务 Xsens dataset 上训练下一版 SmolVLA LoRA baseline。
+- [ ] 评估 global validation/test flow-matching loss。
+- [ ] 评估 per-task validation/test flow-matching loss。
+- [ ] 渲染高优先级 task 的 held-out open-loop 视频。
+- [ ] 更新 README 中的多任务训练命令和结果快照。
