@@ -2,6 +2,7 @@
 
 - [x] 明确需要从单任务 smoke baseline 切换到 XVLA 相关多任务 Xsens baseline。
 - [x] 整理 `benchmark1_0_compressed` 和 `benchmark1_1_compressed` 中网页已确认的 Xsens task，并按 XVLA 相关性分类。
+- [x] 通过 `hf-mirror.com` 直连下载第一批高优先级 task 中的 `place_button` compressed shards。
 - [ ] 用 Hugging Face 登录态或 CLI/API 获取 `benchmark1_0_compressed/h5_tienkung_xsens_1rgb` 完整文件清单，补齐网页 `Load more files` 后面的任务。
 - [ ] 记录每个候选 task 的 compressed shard 数量和总大小。
 - [ ] 下载第一批高优先级 task：`gear_place`、`place_button`、`place_button_then_press`。
