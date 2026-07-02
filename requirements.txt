@@ -1,0 +1,8 @@
+# Helper dependencies used by repository scripts.
+# Install LeRobot, PyTorch, Transformers, and PEFT according to your training environment.
+h5py
+imageio
+numpy
+opencv-python
+pillow
+tensorboard

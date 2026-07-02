@@ -1,0 +1,30 @@
+# 任务清单
+
+- [x] 为当前仓库建立 OpenSpec 结构。
+- [x] 记录本地环境分工：`xmimic` 用于 Isaac Sim，`lerobot312` 用于训练。
+- [x] 在 `lerobot312` 中安装并验证 SmolVLA/PEFT 依赖。
+- [x] 下载并验证 `lerobot/smolvla_base` 以及所需 SmolVLM2 权重。
+- [x] 下载 RoboMIND 静态 schema 文件。
+- [x] 明确文档中的 TienKung Xsens 26D 映射。
+- [x] 继续或替换 TienKung Xsens smoke dataset 下载。
+- [x] 下载更多 TienKung Xsens episodes，形成可用于小规模正式训练的数据集。
+- [x] 检查一个真实 TienKung Xsens HDF5 样本。
+- [x] 实现 RoboMIND TienKung Xsens 到 canonical 26D 的 sample reader。
+- [x] 实现所选 Xsens 轨迹到 LeRobotDataset 的转换。
+- [x] 用 dataloader smoke test 验证转换后的数据集。
+- [x] 在 tiny dataset 上运行 SmolVLA LoRA smoke training。
+- [x] 用 40 条 TienKung Xsens episode 完成 1000 step SmolVLA LoRA 小规模训练。
+- [x] 用 134 条 TienKung Xsens episode 完成 5000 step SmolVLA LoRA baseline 训练。
+- [x] 设计 SmolVLA train runner，明确 wrapper、preflight、manifest 和失败分类边界。
+- [ ] 实现仓库内 SmolVLA train runner，而不只是 shell command wrapper。
+- [ ] 为 train runner 增加 dataset schema、CUDA、HF cache 和 feature override preflight。
+- [ ] 为 train runner 增加训练 manifest 和失败分类。
+- [x] 实现 episode-level train/val split manifest。
+- [x] 实现 SmolVLA validation flow-matching loss 评估脚本。
+- [x] 在 held-out val split 上记录 000200、000600、001000 checkpoint 的 validation loss smoke 指标。
+- [x] 在 134 episode baseline 上记录 001000、003000、005000 validation loss smoke 指标和 005000 test loss smoke 指标。
+- [x] 设计 open-loop action inspection，明确 single/chunk 模式、分组指标和输出产物。
+- [x] 实现 open-loop action inspection v1：single-step action 对比、分组 MAE/MSE、JSON/CSV/PNG 输出。
+- [ ] 实现 open-loop action inspection v2：chunk action 对齐、episode 边界和 padding 处理。
+- [ ] 导出 checkpoint，并记录推理输入/输出约定。
+- [ ] 定义后续 ZMQ policy inference 集成契约。

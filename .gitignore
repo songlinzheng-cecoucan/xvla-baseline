@@ -13,15 +13,28 @@ venv/
 env/
 
 # Local data and generated artifacts
-data/
-datasets/
-outputs/
-artifacts/
+/data/
+/datasets/
+/outputs/
+/artifacts/
+/reports/
+/tensorboard/
+/visualizations/
+/visualizations*/
+robomind_static/.cache/
+.cache/
 *.h5
 *.hdf5
 *.pt
 *.pth
 *.ckpt
+*.safetensors
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.tfevents*
+events.out.tfevents*
 
 # Logs and temporary files
 *.log
@@ -33,3 +46,5 @@ artifacts/
 .DS_Store
 .idea/
 .vscode/
+.agents/
+.codex/

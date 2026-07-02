@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xvla-baseline"
+version = "0.1.0"
+description = "Baseline data, training, and offline evaluation tooling for XVLA."
+requires-python = ">=3.10"
+readme = "README.md"
+dependencies = [
+  "h5py",
+  "imageio",
+  "numpy",
+  "opencv-python",
+  "pillow",
+  "tensorboard",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+xvla-convert-xsens = "xvla_baseline.data.convert_xsens_to_lerobot:main"
+xvla-split-episodes = "xvla_baseline.data.split_lerobot_episodes:main"
+xvla-train-smolvla-lora = "xvla_baseline.training.train_smolvla_lora:main"
+xvla-eval-loss = "xvla_baseline.eval.eval_smolvla_val_loss:main"
+xvla-inspect-open-loop = "xvla_baseline.eval.inspect_smolvla_open_loop:main"
+xvla-render-open-loop-video = "xvla_baseline.eval.render_smolvla_open_loop_video:main"
+xvla-export-tensorboard = "xvla_baseline.eval.export_metrics_to_tensorboard:main"
