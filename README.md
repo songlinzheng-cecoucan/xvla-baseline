@@ -1,75 +1,81 @@
 # XVLA Baseline
 
-This repository contains baseline data, training, and offline evaluation tooling for the XVLA VLA operation track.
+本仓库提供 XVLA VLA 操作赛道的 baseline 数据处理、训练和离线评估工具。
 
-Current method: adapt RoboMIND TienKung Xsens trajectories to a 26D action interface and fine-tune `lerobot/smolvla_base` with LoRA. The repository is structured so additional policy families can be added later without changing the project identity.
+当前方法：将 RoboMIND TienKung Xsens 轨迹适配到 XVLA 26 维动作接口，并基于 `lerobot/smolvla_base` 做 LoRA 微调。仓库结构刻意保持通用，后续可以继续加入 OpenVLA、pi0、ACT、Diffusion Policy 或自研策略，而不需要更换项目名称。
 
-The repository intentionally does not include raw HDF5 files, LeRobot datasets, checkpoints, TensorBoard logs, or generated videos.
+本仓库不包含原始 HDF5、LeRobotDataset、checkpoint、TensorBoard 日志或生成视频。
 
-## Scope
+## 范围
 
-Implemented:
+已实现：
 
-- Read and validate RoboMIND TienKung Xsens HDF5 trajectories.
-- Map Xsens `puppet/joint_position` and `puppet/end_effector` to a canonical XVLA 26D vector.
-- Convert selected trajectories to a LeRobotDataset.
-- Create episode-level train/val/test split manifests.
-- Launch SmolVLA LoRA training in `lerobot312`.
-- Evaluate checkpoint flow-matching loss on held-out episodes.
-- Inspect open-loop action predictions with JSON/CSV/PNG outputs.
-- Render open-loop action comparison videos.
-- Export existing JSON metrics to TensorBoard event files.
+- 读取并校验 RoboMIND TienKung Xsens HDF5 轨迹。
+- 将 Xsens 的 `puppet/joint_position` 和 `puppet/end_effector` 映射到 XVLA canonical 26D 向量。
+- 将选定轨迹转换为 LeRobotDataset。
+- 生成 episode-level train / val / test split manifest。
+- 在 `lerobot312` 环境中启动 SmolVLA LoRA 训练。
+- 在 held-out episodes 上评估 checkpoint 的 flow-matching loss。
+- 做 open-loop action inspection，输出 JSON / CSV / PNG。
+- 渲染 open-loop action 对比视频。
+- 将已有 JSON 指标导出为 TensorBoard event 文件。
 
-Not implemented yet:
+暂未实现：
 
-- XVLA benchmark ZMQ policy service.
-- Closed-loop Isaac Sim rollout.
-- TianYi2.0/BrainCo2-specific action remapping or safety control.
-- Full training runner preflight/manifest implementation.
+- XVLA benchmark ZMQ policy service。
+- Isaac Sim 闭环 rollout。
+- TianYi2.0 / BrainCo2 专属动作 remapping 或安全控制。
+- 完整 train runner 的 preflight / manifest / failure classification。
 
-## Environment Split
+## 环境分工
 
-Keep simulation and training environments separate:
+仿真和训练环境保持分离：
 
 ```text
 xmimic      Isaac Sim / XVLA benchmark runtime
-lerobot312  LeRobot dataset conversion, SmolVLA training, evaluation
+lerobot312  LeRobot 数据转换、SmolVLA 训练、离线评估
 ```
 
-The scripts in this repository assume `lerobot312` has LeRobot, PyTorch, PEFT, Transformers, Pillow, OpenCV, ImageIO, and TensorBoard available.
+本仓库脚本默认 `lerobot312` 中已有 LeRobot、PyTorch、PEFT、Transformers、Pillow、OpenCV、ImageIO 和 TensorBoard。
 
-Helper dependencies used directly by this repository are listed in `requirements.txt`. LeRobot, PyTorch, Transformers, and PEFT should be installed according to the training environment you use.
+`requirements.txt` 只列出本仓库脚本直接使用的辅助依赖。LeRobot、PyTorch、Transformers 和 PEFT 请按你的训练环境单独安装。
 
-## Repository Layout
+## 仓库结构
 
 ```text
 src/xvla_baseline/
-  data/       RoboMIND Xsens reader, LeRobot conversion, episode split helpers
-  training/   SmolVLA LoRA training launcher
-  eval/       loss evaluation, open-loop inspection, video rendering, TensorBoard export
-scripts/      thin CLI wrappers for the package modules
-openspec/     spec-first design and task tracking
+  data/       RoboMIND Xsens reader、LeRobot 转换、episode split 工具
+  training/   SmolVLA LoRA 训练 launcher
+  eval/       loss 评估、open-loop inspection、视频渲染、TensorBoard 导出
+scripts/      package module 的轻量 CLI wrapper
+openspec/     spec-first 设计和任务管理
 robomind_static/static/
-              small RoboMIND schema/reference files
+              小型 RoboMIND schema / reference 文件
 ```
 
-For quick local use, run the wrappers in `scripts/`. For installed usage, run:
+本地快速使用时，直接运行 `scripts/` 下的 wrapper。若希望安装成包：
 
 ```bash
 pip install -e .
 ```
 
-Then use the console commands declared in `pyproject.toml`, such as `xvla-eval-loss` or `xvla-inspect-open-loop`.
+安装后可以使用 `pyproject.toml` 中声明的 console commands，例如：
 
-## Data Layout
+```text
+xvla-eval-loss
+xvla-inspect-open-loop
+xvla-render-open-loop-video
+```
 
-Local datasets and training artifacts should live outside the git repository:
+## 数据目录
+
+本地数据和训练产物应放在 git 仓库外：
 
 ```text
 /home/slzheng/datasets/xvla
 ```
 
-Current local baseline artifacts used during development:
+当前开发时使用过的本地产物示例：
 
 ```text
 /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_hdf5_134
@@ -77,11 +83,11 @@ Current local baseline artifacts used during development:
 /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_134ep_5000
 ```
 
-These paths are examples from the local machine; teammates should adjust them for their own data location.
+这些路径只是本机示例。队友使用时应替换成自己的数据目录。
 
-## Canonical 26D Action
+## Canonical 26D 动作
 
-The baseline uses one fixed 26D state/action vector:
+baseline 使用固定的 26 维 state / action 向量：
 
 ```text
 0:7    left_arm
@@ -90,7 +96,7 @@ The baseline uses one fixed 26D state/action vector:
 20:26  right_hand
 ```
 
-RoboMIND TienKung Xsens mapping:
+RoboMIND TienKung Xsens 到 canonical 26D 的映射：
 
 ```text
 puppet/joint_position[:, 0:7]   -> left_arm
@@ -99,18 +105,18 @@ puppet/end_effector[:, 0:6]     -> left_hand
 puppet/end_effector[:, 6:12]    -> right_hand
 ```
 
-Reader v1 uses absolute target semantics:
+Reader v1 使用 absolute target 语义：
 
 ```text
 state[t] = puppet canonical26[t]
 action[t] = puppet canonical26[t]
 ```
 
-This is a baseline imitation-learning convention, not a final benchmark control contract.
+这是 baseline 阶段的 imitation-learning 约定，不是最终 benchmark 控制接口契约。
 
-## Main Scripts
+## 主要命令
 
-### Convert Xsens HDF5 to LeRobotDataset
+### 转换 Xsens HDF5 为 LeRobotDataset
 
 ```bash
 conda run -n lerobot312 python scripts/convert_xsens_to_lerobot.py \
@@ -120,7 +126,7 @@ conda run -n lerobot312 python scripts/convert_xsens_to_lerobot.py \
   --overwrite
 ```
 
-### Create Episode Split
+### 生成 episode split
 
 ```bash
 python scripts/split_lerobot_episodes.py \
@@ -132,7 +138,7 @@ python scripts/split_lerobot_episodes.py \
   --seed 1000
 ```
 
-### Train SmolVLA LoRA
+### 训练 SmolVLA LoRA
 
 ```bash
 python scripts/train_smolvla_lora.py \
@@ -148,7 +154,7 @@ python scripts/train_smolvla_lora.py \
   --log-freq 50
 ```
 
-### Evaluate Flow-Matching Loss
+### 评估 flow-matching loss
 
 ```bash
 env \
@@ -169,7 +175,7 @@ env \
     --output /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_134ep_5000/test_loss_005000_max100.json
 ```
 
-### Inspect Open-Loop Actions
+### Open-loop action inspection
 
 ```bash
 env \
@@ -189,7 +195,7 @@ env \
     --output-dir /home/slzheng/datasets/xvla/reports/open_loop_005000_test
 ```
 
-### Render Open-Loop Video
+### 渲染 open-loop 对比视频
 
 ```bash
 env \
@@ -210,9 +216,9 @@ env \
     --device cuda
 ```
 
-## Baseline Result Snapshot
+## 当前 baseline 结果快照
 
-The current local 134-episode run used:
+当前本机 134-episode run 使用：
 
 ```text
 train/val/test episodes: 107 / 13 / 14
@@ -222,7 +228,7 @@ batch_size: 1
 LoRA rank: 16
 ```
 
-Checkpoint-level smoke metrics:
+checkpoint 级别 smoke 指标：
 
 ```text
 val 001000 flow-matching loss max100: 1.3406
@@ -231,11 +237,11 @@ val 005000 flow-matching loss max100: 0.7523
 test 005000 flow-matching loss max100: 0.7973
 ```
 
-These are open-loop/offline imitation metrics. They do not imply XVLA closed-loop benchmark success.
+这些是 open-loop / offline imitation 指标，不代表 XVLA 闭环 benchmark 成功率。
 
 ## TensorBoard
 
-The LeRobot training run used during development did not emit native TensorBoard logs. Existing JSON metrics can be exported:
+开发时使用的 LeRobot 训练命令没有直接写出原生 TensorBoard log。已有 JSON 指标可以导出为 TensorBoard event：
 
 ```bash
 conda run -n lerobot312 python scripts/export_metrics_to_tensorboard.py \
@@ -243,7 +249,7 @@ conda run -n lerobot312 python scripts/export_metrics_to_tensorboard.py \
   --log-dir /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_134ep_5000/tensorboard
 ```
 
-Start TensorBoard:
+启动 TensorBoard：
 
 ```bash
 conda run -n lerobot312 tensorboard \
@@ -254,26 +260,27 @@ conda run -n lerobot312 tensorboard \
 
 ## OpenSpec
 
-The active baseline design is tracked under:
+当前 baseline 设计记录在：
 
 ```text
 openspec/changes/add-xvla-smolvla-baseline
 ```
 
-Validate the active change:
+校验 active change：
 
 ```bash
 openspec validate add-xvla-smolvla-baseline
 ```
 
-## Repository Hygiene
+## 仓库卫生
 
-Do not commit:
+不要提交：
 
-- raw HDF5 files
-- LeRobotDataset exports
-- checkpoints
-- TensorBoard logs
-- generated reports
-- generated videos
-- Hugging Face cache files
+- 原始 HDF5 文件
+- LeRobotDataset 导出
+- checkpoint
+- TensorBoard 日志
+- 生成报告
+- 生成视频
+- Hugging Face cache 文件
+
