@@ -62,6 +62,7 @@ pip install -e .
 安装后可以使用 `pyproject.toml` 中声明的 console commands，例如：
 
 ```text
+xvla-task-distribution-manifest
 xvla-eval-loss
 xvla-inspect-open-loop
 xvla-render-open-loop-video
@@ -80,7 +81,9 @@ xvla-render-open-loop-video
 ```text
 /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_hdf5_134
 /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_lerobot_134
+/home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412
 /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_134ep_5000
+/home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_place_button_60ep_smoke_1000
 ```
 
 这些路径只是本机示例。队友使用时应替换成自己的数据目录。
@@ -138,6 +141,19 @@ python scripts/split_lerobot_episodes.py \
   --seed 1000
 ```
 
+### 生成 task distribution manifest
+
+```bash
+python scripts/write_task_distribution_manifest.py \
+  --dataset-root /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412 \
+  --dataset-repo-id local/robomind_xsens_pick_pipe_place_button_412 \
+  --source-root /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_hdf5_134 \
+  --source-root /home/slzheng/datasets/xvla/robomind_xsens_place_button_hdf5 \
+  --task-category 'pick_pipe_place_plate_twice=小物体放入托盘/盘子' \
+  --task-category 'place_button=按钮/开关操作' \
+  --output /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412/task_distribution_manifest.json
+```
+
 ### 训练 SmolVLA LoRA
 
 ```bash
@@ -157,22 +173,16 @@ python scripts/train_smolvla_lora.py \
 ### 评估 flow-matching loss
 
 ```bash
-env \
-  -u ALL_PROXY -u all_proxy \
-  -u HTTP_PROXY -u HTTPS_PROXY \
-  -u http_proxy -u https_proxy \
-  HF_HUB_OFFLINE=1 \
-  HF_DATASETS_CACHE=/tmp/hf_datasets_cache \
-  conda run -n lerobot312 python scripts/eval_smolvla_val_loss.py \
-    --checkpoint /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_134ep_5000/checkpoints/005000/pretrained_model \
-    --dataset-root /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_lerobot_134 \
-    --dataset-repo-id local/robomind_xsens_pick_pipe_134 \
-    --split-manifest /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_lerobot_134/split_seed1000.json \
-    --split-name test \
-    --batch-size 1 \
-    --device cuda \
-    --max-batches 100 \
-    --output /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_134ep_5000/test_loss_005000_max100.json
+conda run -n lerobot312 python scripts/eval_smolvla_val_loss.py \
+  --checkpoint /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_134ep_5000/checkpoints/005000/pretrained_model \
+  --dataset-root /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_lerobot_134 \
+  --dataset-repo-id local/robomind_xsens_pick_pipe_134 \
+  --split-manifest /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_lerobot_134/split_seed1000.json \
+  --split-name test \
+  --batch-size 1 \
+  --device cuda \
+  --max-batches 100 \
+  --output /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_134ep_5000/test_loss_005000_max100.json
 ```
 
 ### Open-loop action inspection
@@ -237,6 +247,27 @@ val 005000 flow-matching loss max100: 0.7523
 test 005000 flow-matching loss max100: 0.7973
 ```
 
+多任务 smoke run：
+
+```text
+dataset: local/robomind_xsens_pick_pipe_place_button_412
+dataset root: /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412
+episodes: 412
+frames: 157,099
+tasks:
+  pick_pipe_place_plate_twice: 134 episodes / 48,862 frames
+  place_button: 278 episodes / 108,237 frames
+smoke train split: 60 episodes, balanced 30 + 30
+steps: 1,000
+batch_size: 1
+LoRA rank: 16
+checkpoint: /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_place_button_60ep_smoke_1000/checkpoints/001000/pretrained_model
+val flow-matching loss max100: 1.0435
+test flow-matching loss max100: 1.2277
+```
+
+full 330-episode train split 曾尝试直接启动，但 LeRobot 初始化阶段 13 分钟内 RSS 上升到约 40GB 且尚未进入 GPU step；当前建议先用 balanced smoke split 验证，再优化 full-split 训练入口。
+
 这些是 open-loop / offline imitation 指标，不代表 XVLA 闭环 benchmark 成功率。
 
 ## TensorBoard
@@ -263,13 +294,13 @@ conda run -n lerobot312 tensorboard \
 当前 baseline 设计记录在：
 
 ```text
-openspec/changes/add-xvla-smolvla-baseline
+openspec/changes/add-xvla-xsens-multitask-baseline
 ```
 
 校验 active change：
 
 ```bash
-openspec validate add-xvla-smolvla-baseline
+openspec validate add-xvla-xsens-multitask-baseline
 ```
 
 ## 仓库卫生
@@ -283,4 +314,3 @@ openspec validate add-xvla-smolvla-baseline
 - 生成报告
 - 生成视频
 - Hugging Face cache 文件
-

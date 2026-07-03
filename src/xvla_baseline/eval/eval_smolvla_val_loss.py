@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,15 @@ from lerobot.datasets.dataset_metadata import LeRobotDatasetMetadata
 from lerobot.datasets.factory import resolve_delta_timestamps
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.policies.factory import make_policy, make_pre_post_processors
+
+PROXY_ENV_KEYS = (
+    "ALL_PROXY",
+    "all_proxy",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+)
 
 
 def parse_episode_list(value: str | None) -> list[int] | None:
@@ -144,6 +154,11 @@ def main() -> None:
     parser.add_argument("--max-batches", type=int, default=None, help="Optional cap for smoke evaluation.")
     parser.add_argument("--device", default="cuda", help="Evaluation device.")
     parser.add_argument("--num-workers", type=int, default=0, help="Dataloader workers.")
+    parser.add_argument("--hf-datasets-cache", default="/tmp/hf_datasets_cache", help="Hugging Face datasets cache.")
+    parser.add_argument("--online", dest="offline", action="store_false", help="Allow Hugging Face Hub network access.")
+    parser.set_defaults(offline=True)
+    parser.add_argument("--keep-proxy", dest="clear_proxy", action="store_false", help="Keep proxy env vars.")
+    parser.set_defaults(clear_proxy=True)
     parser.add_argument(
         "--use-peft",
         choices=["auto", "true", "false"],
@@ -159,6 +174,12 @@ def main() -> None:
         raise ValueError("Use either --episodes or --split-manifest, not both.")
     episodes = explicit_episodes if explicit_episodes is not None else split_episodes
     use_peft = None if args.use_peft == "auto" else args.use_peft == "true"
+    if args.clear_proxy:
+        for key in PROXY_ENV_KEYS:
+            os.environ.pop(key, None)
+    os.environ.setdefault("HF_DATASETS_CACHE", args.hf_datasets_cache)
+    if args.offline:
+        os.environ["HF_HUB_OFFLINE"] = "1"
 
     result = evaluate_loss(
         checkpoint=Path(args.checkpoint).expanduser(),

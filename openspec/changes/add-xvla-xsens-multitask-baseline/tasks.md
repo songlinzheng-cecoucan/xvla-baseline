@@ -13,11 +13,11 @@
 - [ ] 下载第一批高优先级 task：`gear_place`、`place_button`、`place_button_then_press`。
 - [ ] 解压第一批 task，并验证每个 task 至少一个真实 HDF5 trajectory 通过 Xsens reader。
 - [ ] 下载第二批中高优先级 task：`pick_shelf_insert_machine_press_switch_place_plate`、`battery_insertion_with_pullout`、`pick_pipe_place_plate_twice`。
-- [ ] 将多任务 Xsens HDF5 转换为统一 LeRobotDataset。
-- [ ] 生成 task distribution manifest。
-- [ ] 生成 episode-level train/val/test split，并保证同一 episode 不跨 split。
-- [ ] 在多任务 Xsens dataset 上训练下一版 SmolVLA LoRA baseline。
-- [ ] 评估 global validation/test flow-matching loss。
+- [x] 将当前可用的 `pick_pipe_place_plate_twice` + `place_button` Xsens HDF5 转换为统一 LeRobotDataset：412 episodes，157,099 frames。
+- [x] 生成 task distribution manifest。
+- [x] 生成 episode-level train/val/test split，并保证同一 episode 不跨 split。
+- [x] 在 balanced 60-episode 多任务 smoke split 上训练下一版 SmolVLA LoRA baseline。
+- [x] 评估 global validation/test flow-matching loss。
 - [ ] 评估 per-task validation/test flow-matching loss。
 - [ ] 渲染高优先级 task 的 held-out open-loop 视频。
-- [ ] 更新 README 中的多任务训练命令和结果快照。
+- [x] 更新 README 中的多任务训练命令和结果快照。

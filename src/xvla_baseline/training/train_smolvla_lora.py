@@ -38,6 +38,7 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "run",
         "-n",
         args.conda_env,
+        "--no-capture-output",
         "lerobot-train",
         f"--policy.path={args.policy_path}",
         "--policy.push_to_hub=false",

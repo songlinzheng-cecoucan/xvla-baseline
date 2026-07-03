@@ -149,3 +149,104 @@ task distribution manifest：
 place_button episodes: 278
 place_button frames: 108,237
 ```
+
+## 2026-07-03：pick_pipe + place_button 合并数据集和 smoke 训练
+
+合并转换命令：
+
+```bash
+conda run -n lerobot312 python scripts/convert_xsens_to_lerobot.py \
+  /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_hdf5_134 \
+  /home/slzheng/datasets/xvla/robomind_xsens_place_button_hdf5 \
+  --output-root /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412 \
+  --repo-id local/robomind_xsens_pick_pipe_place_button_412
+```
+
+结果：
+
+```text
+dataset root: /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412
+repo_id: local/robomind_xsens_pick_pipe_place_button_412
+episodes: 412
+frames: 157,099
+du: 60G
+```
+
+task distribution：
+
+```text
+pick_pipe_place_plate_twice: 134 episodes, 48,862 frames, 小物体放入托盘/盘子
+place_button: 278 episodes, 108,237 frames, 按钮/开关操作
+```
+
+split：
+
+```text
+split manifest: /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412/split_seed1000.json
+train/val/test episodes: 330 / 41 / 41
+split overlap: 0
+```
+
+LeRobotDataset 加载验证：
+
+```text
+len: 157,099
+num_episodes: 412
+observation.state shape: (26,)
+action shape: (26,)
+observation.images.camera_top shape: (3, 480, 640)
+```
+
+full train split 尝试：
+
+```text
+output_dir: /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_place_button_412ep_2000
+episodes: 330
+result: interrupted before training step
+reason: LeRobot 初始化阶段约 13 分钟内 RSS 上升到约 40GB，仍未进入 GPU step
+```
+
+balanced smoke split：
+
+```text
+split manifest: /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412/split_smoke_seed1000_60.json
+episodes: 60
+pick_pipe_place_plate_twice: 30
+place_button: 30
+```
+
+smoke 训练：
+
+```bash
+python scripts/train_smolvla_lora.py \
+  --dataset-root /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412 \
+  --dataset-repo-id local/robomind_xsens_pick_pipe_place_button_412 \
+  --output-dir /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_place_button_60ep_smoke_1000 \
+  --split-manifest /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412/split_smoke_seed1000_60.json \
+  --split-name train \
+  --steps 1000 \
+  --batch-size 1 \
+  --lora-rank 16 \
+  --save-freq 500 \
+  --log-freq 25 \
+  --hf-datasets-cache /tmp/hf_datasets_cache_xvla_smoke60
+```
+
+训练结果：
+
+```text
+checkpoint: /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_place_button_60ep_smoke_1000/checkpoints/001000/pretrained_model
+dataset.num_frames: 24,787
+dataset.num_episodes: 60
+num_learnable_params: 742,656
+num_total_params: 450,788,832
+speed: about 2.27 step/s
+step 1000 train loss: 1.056
+```
+
+held-out loss：
+
+```text
+val max100 mean_loss: 1.0435
+test max100 mean_loss: 1.2277
+```
