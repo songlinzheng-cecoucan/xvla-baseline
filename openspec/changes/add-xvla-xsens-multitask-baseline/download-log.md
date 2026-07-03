@@ -55,3 +55,97 @@ use: 44%
 - 合并分片为 `place_button.tar.gz`。
 - 解压到本地 HDF5 目录。
 - 用 Xsens reader 检查至少一个真实 `trajectory.hdf5`。
+
+## 2026-07-03：place_button 解压和验证
+
+解压方式：
+
+```bash
+mkdir -p /home/slzheng/datasets/xvla/robomind_xsens_place_button_hdf5
+cat /home/slzheng/datasets/RoboMIND/benchmark1_0_compressed/h5_tienkung_xsens_1rgb/place_button.tar.gz.part-* \
+  | tar -xzf - -C /home/slzheng/datasets/xvla/robomind_xsens_place_button_hdf5
+```
+
+结果：
+
+```text
+hdf5 root: /home/slzheng/datasets/xvla/robomind_xsens_place_button_hdf5
+task dir: /home/slzheng/datasets/xvla/robomind_xsens_place_button_hdf5/place_button
+trajectory.hdf5 count: 278
+du: 25G
+```
+
+Xsens reader 全量验证：
+
+```text
+num_files: 278
+failures: 0
+total_frames: 108,237
+min_frames: 203
+max_frames: 996
+mean_frames: 389.34
+```
+
+样本 task：
+
+```text
+pick up the button,place it on the desk,press the button,press the button
+```
+
+样本 schema：
+
+```text
+state_shape:  (497, 26)
+action_shape: (497, 26)
+first_rgb_shape: (480, 640, 3)
+contains_nan: false
+```
+
+## 2026-07-03：place_button LeRobotDataset 转换
+
+转换命令：
+
+```bash
+conda run -n lerobot312 python scripts/convert_xsens_to_lerobot.py \
+  /home/slzheng/datasets/xvla/robomind_xsens_place_button_hdf5 \
+  --output-root /home/slzheng/datasets/xvla/robomind_xsens_place_button_lerobot_278 \
+  --repo-id local/robomind_xsens_place_button_278
+```
+
+结果：
+
+```text
+dataset root: /home/slzheng/datasets/xvla/robomind_xsens_place_button_lerobot_278
+repo_id: local/robomind_xsens_place_button_278
+episodes: 278
+frames: 108,237
+fps: 30
+use_videos: false
+du: 40G
+```
+
+LeRobotDataset 加载验证：
+
+```text
+len: 108,237
+num_episodes: 278
+observation.state shape: (26,)
+action shape: (26,)
+observation.images.camera_top shape: (3, 480, 640)
+```
+
+split：
+
+```text
+split manifest: /home/slzheng/datasets/xvla/robomind_xsens_place_button_lerobot_278/split_seed1000.json
+train/val/test episodes: 222 / 28 / 28
+split overlap: 0
+```
+
+task distribution manifest：
+
+```text
+/home/slzheng/datasets/xvla/robomind_xsens_place_button_lerobot_278/task_distribution_manifest.json
+place_button episodes: 278
+place_button frames: 108,237
+```
