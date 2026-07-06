@@ -173,8 +173,13 @@ def convert_xsens_to_lerobot(
                     ACTION_FEATURE_KEY: trajectory.action[frame_index].astype(np.float32, copy=False),
                     "task": trajectory.task,
                 }
-            )
+        )
         dataset.save_episode()
+        print(
+            f"[convert] episode={episode_index + 1}/{len(hdf5_paths)} "
+            f"frames={frame_count} source={hdf5_path}",
+            flush=True,
+        )
 
         converted.append(
             ConvertedEpisode(

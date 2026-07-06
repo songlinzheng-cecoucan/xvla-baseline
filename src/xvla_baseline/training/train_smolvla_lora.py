@@ -98,6 +98,11 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--batch-size must be positive")
     if args.lora_rank <= 0:
         raise ValueError("--lora-rank must be positive")
+    if args.log_file:
+        output_dir = Path(args.output_dir).expanduser().resolve()
+        log_parent = Path(args.log_file).expanduser().parent.resolve()
+        if log_parent == output_dir or output_dir in log_parent.parents:
+            raise ValueError("--log-file must be outside --output-dir; LeRobot refuses pre-existing output dirs.")
 
 
 def parse_args() -> argparse.Namespace:
@@ -123,6 +128,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--keep-proxy", dest="clear_proxy", action="store_false", help="Keep proxy env vars.")
     parser.set_defaults(clear_proxy=True)
     parser.add_argument("--wandb", action="store_true", help="Enable wandb logging.")
+    parser.add_argument("--log-file", default=None, help="Write lerobot-train stdout/stderr to this file.")
     parser.add_argument("--dry-run", action="store_true", help="Print the command without running it.")
     return parser.parse_args()
 
@@ -136,6 +142,14 @@ def main() -> None:
     print(" ".join(command))
 
     if args.dry_run:
+        return
+
+    if args.log_file:
+        log_file = Path(args.log_file).expanduser()
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        print(f"Writing training log to: {log_file}")
+        with log_file.open("w", encoding="utf-8") as file:
+            subprocess.run(command, env=build_env(args), stdout=file, stderr=subprocess.STDOUT, check=True)
         return
 
     subprocess.run(command, env=build_env(args), check=True)

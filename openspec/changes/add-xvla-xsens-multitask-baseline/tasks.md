@@ -8,16 +8,31 @@
 - [x] 将 `place_button` 转换为 LeRobotDataset：278 episodes，108,237 frames。
 - [x] 为 `place_button` LeRobotDataset 生成 episode-level train/val/test split。
 - [x] 为 `place_button` LeRobotDataset 生成 task distribution manifest。
-- [ ] 用 Hugging Face 登录态或 CLI/API 获取 `benchmark1_0_compressed/h5_tienkung_xsens_1rgb` 完整文件清单，补齐网页 `Load more files` 后面的任务。
-- [ ] 记录每个候选 task 的 compressed shard 数量和总大小。
+- [x] 用 Hugging Face 登录态或 CLI/API 获取 `benchmark1_0_compressed/h5_tienkung_xsens_1rgb` 完整文件清单，补齐网页 `Load more files` 后面的任务。
+- [x] 记录候选 task 的 compressed shard 数量和总大小：`gear_place` 约 70GB，`place_button_then_press` 约 60GB，`pick_shelf_insert_machine_press_switch_place_plate` 约 11GB。
 - [ ] 下载第一批高优先级 task：`gear_place`、`place_button`、`place_button_then_press`。
+  - [x] `place_button` 已完成。
+  - [x] `gear_place` 已完成：7 shards，约 70GB compressed。
+  - [ ] `place_button_then_press` 暂停下载，仅保留 partial cache，未纳入当前训练集。
 - [ ] 解压第一批 task，并验证每个 task 至少一个真实 HDF5 trajectory 通过 Xsens reader。
+  - [x] `place_button` 已解压并全量验证。
+  - [x] `gear_place` 已解压并全量验证：507 条 Xsens HDF5 trajectory，0 失败，309,964 frames。
+  - [ ] `place_button_then_press` 未完成。
 - [ ] 下载第二批中高优先级 task：`pick_shelf_insert_machine_press_switch_place_plate`、`battery_insertion_with_pullout`、`pick_pipe_place_plate_twice`。
+  - [x] `pick_pipe_place_plate_twice` 已完成。
+  - [x] `pick_shelf_insert_machine_press_switch_place_plate` 已完成：2 shards，约 11GB compressed。
+  - [ ] `battery_insertion_with_pullout` 待下载。
+- [x] 解压并验证 `pick_shelf_insert_machine_press_switch_place_plate`：58 条 Xsens HDF5 trajectory，0 失败，54,128 frames。
+- [x] 将 `pick_shelf_insert_machine_press_switch_place_plate` 转换为单任务 LeRobotDataset：58 episodes，54,128 frames。
+- [x] 将 `gear_place` 转换为单任务 LeRobotDataset：507 episodes，309,964 frames。
 - [x] 将当前可用的 `pick_pipe_place_plate_twice` + `place_button` Xsens HDF5 转换为统一 LeRobotDataset：412 episodes，157,099 frames。
-- [x] 生成 task distribution manifest。
-- [x] 生成 episode-level train/val/test split，并保证同一 episode 不跨 split。
+- [x] 将 `pick_pipe_place_plate_twice` + `place_button` + `pick_shelf_insert_machine_press_switch_place_plate` 聚合为统一 LeRobotDataset：470 episodes，211,227 frames。
+- [x] 构建 4-task balanced v3 LeRobotDataset：`gear_place`、`pick_pipe_place_plate_twice`、`pick_shelf_insert_machine_press_switch_place_plate`、`place_button` 各 30 episodes，共 120 episodes，67,997 frames。
+- [x] 为 4-task balanced v3 生成 task distribution manifest。
+- [x] 为 4-task balanced v3 生成 stratified episode-level train/val/test split，并保证同一 episode 不跨 split、每个 task 在 train/val/test 中均为 24/3/3 episodes。
 - [x] 在 balanced 60-episode 多任务 smoke split 上训练下一版 SmolVLA LoRA baseline。
+- [x] 在 4-task balanced v3 train split 上训练 SmolVLA LoRA baseline：96 train episodes，5000 steps，checkpoint `005000` 已产出。
 - [x] 评估 global validation/test flow-matching loss。
-- [ ] 评估 per-task validation/test flow-matching loss。
-- [ ] 渲染高优先级 task 的 held-out open-loop 视频。
+- [x] 评估 per-task validation/test flow-matching loss。
+- [x] 渲染高优先级 task 的 held-out open-loop 视频。
 - [x] 更新 README 中的多任务训练命令和结果快照。

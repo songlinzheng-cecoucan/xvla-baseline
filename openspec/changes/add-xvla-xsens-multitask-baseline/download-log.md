@@ -250,3 +250,140 @@ held-out loss：
 val max100 mean_loss: 1.0435
 test max100 mean_loss: 1.2277
 ```
+
+## 2026-07-04：gear_place 解压、验证和转换
+
+compressed shards：
+
+```text
+source root: /home/slzheng/datasets/RoboMIND/benchmark1_0_compressed/h5_tienkung_xsens_1rgb
+gear_place.tar.gz.part-aa ... part-ag
+compressed du: 70G
+```
+
+解压结果：
+
+```text
+hdf5 root: /home/slzheng/datasets/xvla/robomind_xsens_gear_place_hdf5
+trajectory.hdf5 count: 507
+du: 73G
+```
+
+Xsens reader 全量验证：
+
+```text
+num_files: 507
+failures: 0
+total_frames: 309,964
+min_frames: 148
+max_frames: 3,812
+mean_frames: 611.37
+task: pick up the big nut,place it into the box,pick up the small nut,place it into the box
+image_size: 640x480
+```
+
+LeRobotDataset 转换：
+
+```text
+dataset root: /home/slzheng/datasets/xvla/robomind_xsens_gear_place_lerobot_507
+repo_id: local/robomind_xsens_gear_place_507
+episodes: 507
+frames: 309,964
+fps: 30
+du: 120G
+```
+
+## 2026-07-04：4-task balanced v3 数据集和训练
+
+balanced 数据集构建工具：
+
+```bash
+python scripts/build_balanced_xsens_lerobot.py \
+  --task-root pick_pipe_place_plate_twice=/home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_hdf5_134 \
+  --task-root place_button=/home/slzheng/datasets/xvla/robomind_xsens_place_button_hdf5 \
+  --task-root pick_shelf_insert_machine_press_switch_place_plate=/home/slzheng/datasets/xvla/robomind_xsens_pick_shelf_hdf5 \
+  --task-root gear_place=/home/slzheng/datasets/xvla/robomind_xsens_gear_place_hdf5 \
+  --episodes-per-task 30 \
+  --seed 1000 \
+  --output-root /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120 \
+  --repo-id local/robomind_xsens_xvla_multitask_v3_balanced_120 \
+  --overwrite
+```
+
+转换结果：
+
+```text
+dataset root: /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120
+repo_id: local/robomind_xsens_xvla_multitask_v3_balanced_120
+episodes: 120
+frames: 67,997
+tasks: 4
+du: 25G
+selected manifest: selected_hdf5_manifest.json
+```
+
+task distribution：
+
+```text
+gear_place: 30 episodes, 19,294 frames, 齿轮/工业零件放置
+pick_pipe_place_plate_twice: 30 episodes, 10,520 frames, 小物体放入托盘/盘子
+pick_shelf_insert_machine_press_switch_place_plate: 30 episodes, 26,760 frames, 按钮/开关操作+小物体放入托盘/盘子
+place_button: 30 episodes, 11,423 frames, 按钮/开关操作
+```
+
+split：
+
+```text
+split manifest: /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120/split_seed1000_stratified.json
+split type: episode_stratified_by_task
+train/val/test episodes: 96 / 12 / 12
+per-task train/val/test episodes: 24 / 3 / 3
+```
+
+LeRobotDataset 加载验证：
+
+```text
+len: 67,997
+num_episodes: 120
+fps: 30
+observation.state shape: (26,)
+action shape: (26,)
+observation.images.camera_top shape: (3, 480, 640)
+```
+
+SmolVLA LoRA 训练：
+
+```bash
+python scripts/train_smolvla_lora.py \
+  --dataset-root /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120 \
+  --dataset-repo-id local/robomind_xsens_xvla_multitask_v3_balanced_120 \
+  --output-dir /home/slzheng/datasets/xvla/runs/smolvla_lora_xvla_multitask_v3_balanced120_5000 \
+  --split-manifest /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120/split_seed1000_stratified.json \
+  --split-name train \
+  --steps 5000 \
+  --batch-size 1 \
+  --lora-rank 16 \
+  --save-freq 1000 \
+  --log-freq 25 \
+  --eval-freq 0 \
+  --num-workers 0 \
+  --hf-datasets-cache /tmp/hf_datasets_cache_xvla_v3_balanced120
+```
+
+训练结果：
+
+```text
+output_dir: /home/slzheng/datasets/xvla/runs/smolvla_lora_xvla_multitask_v3_balanced120_5000
+train episodes: 96
+train frames: 53,754
+steps: 5,000
+checkpoints: 001000, 002000, 003000, 004000, 005000
+final checkpoint: checkpoints/005000/pretrained_model
+num_learnable_params: 742,656
+num_total_params: 450,788,832
+initial step-25 loss: 4.012
+step-1000 loss: 1.200
+step-3000 recent loss range: about 0.72-1.09
+final step-5000 loss: 0.625
+training log: /tmp/xvla_v3_smolvla_train.log
+```

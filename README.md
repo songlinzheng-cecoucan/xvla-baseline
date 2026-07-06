@@ -82,8 +82,10 @@ xvla-render-open-loop-video
 /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_hdf5_134
 /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_lerobot_134
 /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412
+/home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120
 /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_134ep_5000
 /home/slzheng/datasets/xvla/runs/smolvla_lora_pick_pipe_place_button_60ep_smoke_1000
+/home/slzheng/datasets/xvla/runs/smolvla_lora_xvla_multitask_v3_balanced120_5000
 ```
 
 这些路径只是本机示例。队友使用时应替换成自己的数据目录。
@@ -141,6 +143,19 @@ python scripts/split_lerobot_episodes.py \
   --seed 1000
 ```
 
+若已经有 task distribution manifest，可以生成按任务分层的 split：
+
+```bash
+python scripts/split_lerobot_episodes.py \
+  --dataset-root /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120 \
+  --dataset-repo-id local/robomind_xsens_xvla_multitask_v3_balanced_120 \
+  --output /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120/split_seed1000_stratified.json \
+  --train-ratio 0.8 \
+  --val-ratio 0.1 \
+  --seed 1000 \
+  --task-distribution-manifest /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120/task_distribution_manifest.json
+```
+
 ### 生成 task distribution manifest
 
 ```bash
@@ -152,6 +167,21 @@ python scripts/write_task_distribution_manifest.py \
   --task-category 'pick_pipe_place_plate_twice=小物体放入托盘/盘子' \
   --task-category 'place_button=按钮/开关操作' \
   --output /home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_place_button_lerobot_412/task_distribution_manifest.json
+```
+
+### 构建 balanced 多任务数据集
+
+```bash
+python scripts/build_balanced_xsens_lerobot.py \
+  --task-root pick_pipe_place_plate_twice=/home/slzheng/datasets/xvla/robomind_xsens_pick_pipe_hdf5_134 \
+  --task-root place_button=/home/slzheng/datasets/xvla/robomind_xsens_place_button_hdf5 \
+  --task-root pick_shelf_insert_machine_press_switch_place_plate=/home/slzheng/datasets/xvla/robomind_xsens_pick_shelf_hdf5 \
+  --task-root gear_place=/home/slzheng/datasets/xvla/robomind_xsens_gear_place_hdf5 \
+  --episodes-per-task 30 \
+  --seed 1000 \
+  --output-root /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120 \
+  --repo-id local/robomind_xsens_xvla_multitask_v3_balanced_120 \
+  --overwrite
 ```
 
 ### 训练 SmolVLA LoRA
@@ -268,6 +298,66 @@ test flow-matching loss max100: 1.2277
 
 full 330-episode train split 曾尝试直接启动，但 LeRobot 初始化阶段 13 分钟内 RSS 上升到约 40GB 且尚未进入 GPU step；当前建议先用 balanced smoke split 验证，再优化 full-split 训练入口。
 
+4-task balanced v3 run：
+
+```text
+dataset: local/robomind_xsens_xvla_multitask_v3_balanced_120
+dataset root: /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v3_balanced_lerobot_120
+episodes: 120
+frames: 67,997
+tasks:
+  gear_place: 30 episodes / 19,294 frames
+  pick_pipe_place_plate_twice: 30 episodes / 10,520 frames
+  pick_shelf_insert_machine_press_switch_place_plate: 30 episodes / 26,760 frames
+  place_button: 30 episodes / 11,423 frames
+stratified train/val/test episodes: 96 / 12 / 12
+per-task train/val/test episodes: 24 / 3 / 3
+steps: 5,000
+batch_size: 1
+LoRA rank: 16
+checkpoint: /home/slzheng/datasets/xvla/runs/smolvla_lora_xvla_multitask_v3_balanced120_5000/checkpoints/005000/pretrained_model
+final train loss: 0.625
+```
+
+4-task balanced232 formal run：
+
+```text
+dataset: local/robomind_xsens_xvla_multitask_v4_balanced_232
+dataset root: /home/slzheng/datasets/xvla/robomind_xsens_xvla_multitask_v4_balanced_lerobot_232
+episodes: 232
+frames: 129,186
+tasks:
+  gear_place: 58 episodes / 32,170 frames
+  pick_pipe_place_plate_twice: 58 episodes / 20,670 frames
+  pick_shelf_insert_machine_press_switch_place_plate: 58 episodes / 54,128 frames
+  place_button: 58 episodes / 22,218 frames
+stratified train/val/test episodes: 184 / 24 / 24
+per-task train/val/test episodes: 46 / 6 / 6
+steps: 50,000
+batch_size: 2
+num_workers: 2
+LoRA rank: 16
+checkpoint: /home/slzheng/datasets/xvla/runs/smolvla_lora_xvla_multitask_v4_balanced232_50000_bs2_nw2/checkpoints/050000/pretrained_model
+```
+
+held-out flow-matching loss：
+
+```text
+validation global: 0.2771
+  gear_place: 0.3174
+  pick_pipe_place_plate_twice: 0.2253
+  pick_shelf_insert_machine_press_switch_place_plate: 0.2204
+  place_button: 0.3511
+test global: 0.2863
+  gear_place: 0.4755
+  pick_pipe_place_plate_twice: 0.2053
+  pick_shelf_insert_machine_press_switch_place_plate: 0.2030
+  place_button: 0.3621
+reports: /home/slzheng/datasets/xvla/eval_reports/balanced232_050000
+open-loop videos: /home/slzheng/datasets/xvla/open_loop_videos/balanced232_050000
+open-loop inspection: /home/slzheng/datasets/xvla/open_loop_inspections/balanced232_050000_test_200
+```
+
 这些是 open-loop / offline imitation 指标，不代表 XVLA 闭环 benchmark 成功率。
 
 ## TensorBoard
@@ -311,6 +401,10 @@ openspec validate add-xvla-xsens-multitask-baseline
 - LeRobotDataset 导出
 - checkpoint
 - TensorBoard 日志
-- 生成报告
 - 生成视频
 - Hugging Face cache 文件
+
+可以提交：
+
+- `docs/experiments/` 下的小型 Markdown / PNG / CSV 实验报告
+- 复现报告所需的轻量脚本

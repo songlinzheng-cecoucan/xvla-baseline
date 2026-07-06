@@ -22,6 +22,7 @@ where = ["src"]
 
 [project.scripts]
 xvla-convert-xsens = "xvla_baseline.data.convert_xsens_to_lerobot:main"
+xvla-build-balanced-xsens = "xvla_baseline.data.build_balanced_xsens_lerobot:main"
 xvla-task-distribution-manifest = "xvla_baseline.data.task_distribution_manifest:main"
 xvla-split-episodes = "xvla_baseline.data.split_lerobot_episodes:main"
 xvla-train-smolvla-lora = "xvla_baseline.training.train_smolvla_lora:main"

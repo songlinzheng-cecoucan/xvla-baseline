@@ -5,9 +5,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from collections import deque
 from pathlib import Path
 from typing import Any
+
+DEFAULT_HF_DATASETS_CACHE = "/tmp/hf_datasets_cache"
+PROXY_ENV_KEYS = (
+    "ALL_PROXY",
+    "all_proxy",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+)
+
+os.environ.setdefault("HF_DATASETS_CACHE", DEFAULT_HF_DATASETS_CACHE)
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+for _proxy_env_key in PROXY_ENV_KEYS:
+    os.environ.pop(_proxy_env_key, None)
 
 import cv2
 import numpy as np

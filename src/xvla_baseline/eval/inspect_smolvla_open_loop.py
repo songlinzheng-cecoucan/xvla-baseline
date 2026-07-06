@@ -6,9 +6,26 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
+
+DEFAULT_HF_DATASETS_CACHE = "/tmp/hf_datasets_cache"
+PROXY_ENV_KEYS = (
+    "ALL_PROXY",
+    "all_proxy",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+)
+
+os.environ.setdefault("HF_DATASETS_CACHE", DEFAULT_HF_DATASETS_CACHE)
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+for _proxy_env_key in PROXY_ENV_KEYS:
+    os.environ.pop(_proxy_env_key, None)
 
 import numpy as np
 import torch
@@ -26,6 +43,14 @@ ACTION_GROUPS = {
     "right_hand": slice(20, 26),
 }
 ACTION_DIM = 26
+
+
+def prepare_offline_runtime() -> None:
+    os.environ.setdefault("HF_DATASETS_CACHE", DEFAULT_HF_DATASETS_CACHE)
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
+    for key in PROXY_ENV_KEYS:
+        os.environ.pop(key, None)
 
 
 def parse_episode_list(value: str | None) -> list[int] | None:
@@ -54,6 +79,7 @@ def load_policy_processors(
     device: str,
     use_peft: bool,
 ):
+    prepare_offline_runtime()
     cfg = PreTrainedConfig.from_pretrained(checkpoint)
     cfg.pretrained_path = checkpoint
     cfg.device = device
